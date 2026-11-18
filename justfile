@@ -1,9 +1,16 @@
+# Zemla fork: every feature except experimental-api-5 / experimental-niches, which src/lib.rs
+# refuses to build with. Used in place of --all-features.
+features := "--features logging,cache_metrics,uuid,chrono_v0_4"
+# The bench crates enable experimental-api-5 on redb, which feature unification would apply to the
+# whole workspace build, so --all builds leave them out.
+exclude_experimental := "--exclude redb-bench --exclude redb-bench-compare"
+
 build: pre
-    ./scripts/podman-sandbox.sh 'cargo build --frozen --all-targets --all-features'
+    ./scripts/podman-sandbox.sh 'cargo build --frozen --all-targets {{features}}'
     ./scripts/podman-sandbox.sh 'cargo doc --frozen'
 
 build_all: pre_all
-    ./scripts/podman-sandbox.sh 'cargo build --frozen --all --all-targets --all-features'
+    ./scripts/podman-sandbox.sh 'cargo build --frozen --all {{exclude_experimental}} --all-targets {{features}}'
     ./scripts/podman-sandbox.sh 'cargo doc --frozen --all --no-deps'
 
 pre: _audit _checks
@@ -18,7 +25,7 @@ _checks:
     ./scripts/podman-sandbox.sh 'just _checks_no_sandbox'
 
 _checks_no_sandbox:
-    cargo clippy --all-targets --all-features
+    cargo clippy --all-targets {{features}}
 
 pre_all: _audit _checks_all
 
@@ -28,7 +35,7 @@ _checks_all:
     ./scripts/podman-sandbox.sh 'just _checks_all_no_sandbox'
 
 _checks_all_no_sandbox:
-    cargo clippy --all --all-targets --all-features
+    cargo clippy --all {{exclude_experimental}} --all-targets {{features}}
 
 flamegraph:
     cargo flamegraph -p redb-bench --bench redb_benchmark
@@ -56,15 +63,15 @@ fuzz_py seconds='600': install_py
     uv run --project ./crates/redb-python python ./crates/redb-python/test/fuzz.py --seconds {{seconds}}
 
 test: pre
-    ./scripts/podman-sandbox.sh 'RUST_BACKTRACE=1 cargo test --frozen --all-features'
+    ./scripts/podman-sandbox.sh 'RUST_BACKTRACE=1 cargo test --frozen {{features}}'
 
 test_all: build_all
-    ./scripts/podman-sandbox.sh 'RUST_BACKTRACE=1 cargo test --frozen --all --all-features'
+    ./scripts/podman-sandbox.sh 'RUST_BACKTRACE=1 cargo test --frozen --all {{exclude_experimental}} {{features}}'
 
 test_all_no_sandbox: pre_all_no_sandbox
-    cargo build --frozen --all --all-targets --all-features
-    cargo doc --frozen --all --no-deps
-    RUST_BACKTRACE=1 cargo test --frozen --all --all-features
+    cargo build --frozen --all {{exclude_experimental}} --all-targets {{features}}
+    cargo doc --frozen --all {{exclude_experimental}} --no-deps
+    RUST_BACKTRACE=1 cargo test --frozen --all {{exclude_experimental}} {{features}}
 
 clear_podman_cache:
     podman volume rm --force redb-sandbox-target
@@ -92,7 +99,7 @@ coverage:
     set -euxo pipefail
     cargo install --locked cargo-llvm-cov
     rustup component add llvm-tools-preview
-    RUST_BACKTRACE=1 cargo llvm-cov --all-features
+    RUST_BACKTRACE=1 cargo llvm-cov {{features}}
 
 bench bench='redb_benchmark': pre
     ./scripts/podman-sandbox.sh 'REDB_BENCHMARK_DIR=/scratch cargo bench --frozen -p redb-bench -p redb-bench-compare --bench {{bench}}'

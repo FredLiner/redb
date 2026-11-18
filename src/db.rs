@@ -4469,6 +4469,7 @@ mod active_transaction_test {
     #[test]
     fn read_only_file_snapshots_preserve_memory_state_and_reuse_cache() {
         use super::TransactionGuard;
+        #[cfg(feature = "experimental-api-5")]
         use crate::ReadableTable;
 
         for mode in [ConcurrencyMode::SingleWriter, ConcurrencyMode::MultiWriter] {
@@ -4544,6 +4545,7 @@ mod active_transaction_test {
     #[cfg(feature = "cache_metrics")]
     #[test]
     fn a_multi_writer_commit_keeps_its_read_cache() {
+        #[cfg(feature = "experimental-api-5")]
         use crate::ReadableTable;
 
         let tmpfile = crate::create_tempfile();
