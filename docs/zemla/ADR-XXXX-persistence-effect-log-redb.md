@@ -399,9 +399,6 @@ Negative:
   ruleset, and define the explicit upgrade path if one is offered.
 - **Apply-lane `Immediate` cadence:** interval or entry count between durable redb
   commits. This trades replay length after a crash against fsync load.
-- **Fork commit trailers:** the fork's `AGENTS.md` asks for an `Assisted-by:` trailer,
-  not `Co-authored-by:`. `96ea596` and `fe511e7` use `Co-Authored-By`. Decide whether
-  to amend them, which needs a force-push of `zemla`.
 
 Resolved since the previous draft:
 - Re-verified at `v4.6.0`: Builder defaults are unchanged (1 GiB cache, quick-repair
@@ -411,6 +408,10 @@ Resolved since the previous draft:
 - Fork test tooling works with the feature guard (`3465d76`). Format, clippy, the
   workspace build, and 697 tests pass on Windows with warnings denied. Not yet run:
   the Linux suite, and `cargo deny`.
+- Fork commit trailers: `96ea596` and `fe511e7` keep their `Co-Authored-By` trailers
+  rather than the `Assisted-by:` form the fork's `AGENTS.md` asks for. Both credit the
+  same assistance, the fork doesn't contribute upstream, and rewriting would mean
+  force-pushing published history. Later commits use `Assisted-by:`.
 
 ## Sign-off Criteria Check
 
