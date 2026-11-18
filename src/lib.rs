@@ -67,6 +67,13 @@
 //! [lmdb]: https://www.lmdb.tech/doc/
 //! [design]: https://github.com/cberner/redb/blob/master/docs/design.md
 
+// Zemla fork: the experimental 5.0 features switch to the unreleased 5.0 API and change on-disk
+// value encodings, so stores written by this fork would be misread. Fail the build instead.
+#[cfg(any(feature = "experimental-api-5", feature = "experimental-niches"))]
+compile_error!(
+    "zemla fork: experimental-api-5 / experimental-niches change on-disk encodings and must not be enabled"
+);
+
 // Everything redb uses beyond core comes through `alloc`, a subset of std, so this is a no-op for
 // std builds.
 extern crate alloc;
