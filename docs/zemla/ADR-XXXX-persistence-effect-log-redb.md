@@ -285,6 +285,14 @@ a new version and never alters campaigns already provisioned.
     to the unreleased 5.0 API and change on-disk `Option<T>` encodings. A guard
     was chosen over trimming the 240 upstream `cfg` sites, which would conflict with
     every future cherry-pick.
+  - `3465d76`: the `justfile` recipes build with an explicit feature list
+    (`logging,cache_metrics,uuid,chrono_v0_4`) instead of `--all-features`. The
+    `--all` recipes exclude `redb-bench` and `redb-bench-compare`, which enable
+    `experimental-api-5` through feature unification. Two unit-test imports used only
+    under `experimental-api-5` are gated on it. `build_no_std`, `bench`, and
+    `bench_containerized` need the experimental features and fail at the guard by
+    design. Upstream's `ci.yml` is left unchanged. Its no_std, wasm, and 32-bit steps
+    fail if GitHub Actions runs on the fork.
 - The 5.0 byte-range locking rework (`2f4ef91`) is not needed, since multi-process
   access is not used.
 - Branch layout on the fork: `zemla` is the default branch and the only line Zemla
@@ -391,9 +399,6 @@ Negative:
   ruleset, and define the explicit upgrade path if one is offered.
 - **Apply-lane `Immediate` cadence:** interval or entry count between durable redb
   commits. This trades replay length after a crash against fsync load.
-- **Fork test tooling vs. the feature guard:** the fork's `just test` and upstream CI
-  build with `--all-features`, which now trips the `compile_error!` guard. The fork's
-  test recipe needs an explicit feature list that excludes the experimental features.
 - **Fork commit trailers:** the fork's `AGENTS.md` asks for an `Assisted-by:` trailer,
   not `Co-authored-by:`. `96ea596` and `fe511e7` use `Co-Authored-By`. Decide whether
   to amend them, which needs a force-push of `zemla`.
@@ -403,6 +408,9 @@ Resolved since the previous draft:
   off for single-writer). The Windows try-lock path is the same, and now affects
   development only.
 - `33e2204` cherry-picked and passing (`96ea596`).
+- Fork test tooling works with the feature guard (`3465d76`). Format, clippy, the
+  workspace build, and 697 tests pass on Windows with warnings denied. Not yet run:
+  the Linux suite, and `cargo deny`.
 
 ## Sign-off Criteria Check
 
@@ -414,8 +422,8 @@ Resolved since the previous draft:
 - [x] redb fork branched at `v4.6.0` (`zemla`, default branch)
 - [x] Panic-abort fix (`33e2204`) applied to the fork
 - [x] Experimental 5.0 features blocked by compile guard
-- [ ] Fork tests in CI and fuzzing on Linux, with a feature list that excludes the
-      experimental features
+- [x] Fork test recipes use a feature list that excludes the experimental features
+- [ ] Fork tests and fuzzing run on Linux
 - [ ] redb configuration (quick-repair, cache size, durability cadence) encoded in the
       store manager
 - [ ] Directory-fsync steps crash-tested on Linux (provisioning, segment create/seal,
